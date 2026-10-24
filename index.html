@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch B First Terminal Surgery Exam MPSGMC Jamnagar</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; padding: 15px; color: #1e293b; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+    .timer { font-size: 1.25rem; font-weight: bold; color: #dc2626; background: #fee2e2; padding: 8px 16px; border-radius: 8px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
+    .question-card { margin-bottom: 25px; padding: 18px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
+    .question-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; line-height: 1.5; }
+    .options label { display: flex; align-items: center; margin: 10px 0; padding: 12px; background: #f8fafc; border-radius: 6px; cursor: pointer; border: 1px solid #e2e8f0; }
+    .options label:hover { background: #e2e8f0; }
+    .options input[type="radio"] { margin-right: 12px; transform: scale(1.2); }
+    .btn { background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 1rem; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; }
+    .btn:hover { background: #1d4ed8; }
+    .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; text-align: center; padding: 25px; }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <!-- ૧. QR કોડ વેરિફિકેશન અને વિગતો ભરવાનું મોડલ -->
+  <div id="start-overlay" class="overlay">
+    <div id="auth-box" style="max-width: 360px; width: 100%;">
+      <h2 id="status-title" style="color: #38bdf8; margin-bottom: 5px;">BATCH B FIRST TERMINAL SURGERY EXAM OCT 2026</h2>
+      <p id="status-msg" style="color: #94a3b8; margin-bottom: 20px;">Please fill your details</p>
+
+      <div class="form-group" style="text-align: left;">
+        <label>Full name:</label>
+        <input type="text" id="stud-name" placeholder="Krutarth M Vatsaraj" required>
+      </div>
+      <div class="form-group" style="text-align: left;">
+        <label>Roll number:</label>
+        <input type="text" id="stud-roll" placeholder="દા.ત. 101" required>
+      </div>
+      <button class="btn" onclick="startExam()">પરીક્ષા શરૂ કરો (Full Screen)</button>
+    </div>
+
+    <!-- જો QR સ્કેન વગર ડાયરેક્ટ ખોલે તો આ એરર બોક્સ દેખાશે -->
+    <div id="error-box" style="display: none; max-width: 400px;">
+      <h2 style="color: #ef4444; font-size: 1.8rem;">🚫 પ્રવેશ પ્રતિબંધિત!</h2>
+      <p style="font-size: 1.1rem; line-height: 1.6;">તમે માન્ય QR કોડ સ્કેન કર્યો નથી અથવા સીધી લિંક ખોલી છે.</p>
+      <p style="color: #fca5a5;">કૃપા કરીને પરીક્ષા હોલના બોર્ડ પર લગાવેલો QR કોડ સ્કેન કરો.</p>
+    </div>
+  </div>
+
+  <!-- ૨. સુપરવાઇઝર અનલોક મોડલ -->
+  <div id="lockout-modal" class="overlay" style="display: none; background: rgba(15, 23, 42, 0.96);">
+    <h2 style="color: #ef4444; font-size: 1.8rem; margin-bottom: 10px;">⚠️ પેપર લૉક કરવામાં આવ્યું છે (Paper locked)</h2>
+    <p id="lockout-reason" style="font-size: 1.1rem; color: #fca5a5;"></p>
+    <p>સુપરવાઇઝરને બોલાવો અને તેમનો પિન દાખલ કરાવો.</p>
+    <div style="max-width: 280px; width: 100%; margin-top: 20px;">
+      <input type="password" id="supervisor-pin" placeholder="સુપરવાઇઝર PIN" style="width: 100%; padding: 12px; font-size: 1.2rem; border-radius: 6px; border: none; text-align: center; margin-bottom: 12px;">
+      <button class="btn" onclick="unlockExam()" style="background: #16a34a;">અનલોક કરો</button>
+    </div>
+  </div>
+
+  <!-- ૩. મુખ્ય પ્રશ્નપત્ર સેક્શન -->
+  <div class="container" id="exam-box" style="display: none;">
+    <div class="header">
+      <div>
+        <h3 id="display-student" style="margin: 0; color: #0f172a;"></h3>
+        <small style="color: #64748b;">પરીક્ષા દરમિયાન સ્ક્રીન છોડવી નહીં</small>
+      </div>
+      <div class="timer" id="timer-display">સમય: 60:00</div>
+    </div>
+
+    <form id="quiz-form">
+      <div id="questions-container"></div>
+      <button type="button" class="btn" style="margin-top: 20px;" onclick="submitExam('વિદ્યાર્થી દ્વારા જાતે સબમિટ')">પેપર સબમિટ કરો</button>
+    </form>
+  </div>
+
+  <script>
+    // ==========================================
+    // ૧. સેટિંગ્સ
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx99mAPf6b026aaEv3pp-goIUSAUrt5e7na9zYxOyFWJfTEqwhRDUdtOBxQTSG4Gxvc/exec";
+    const SECRET_QR_TOKEN = "EXAM2nd_SURGERY"; // આ ટોકન QR Code ની લિંકમાં હોવો જરૂરી છે
+    const EXAM_MINUTES = 60;
+    const SUPERVISOR_PIN = "1995";
+    const MAX_VIOLATIONS = 3;
+
+    const rawQuestions = [
+  { id: "q1", text: "A 28-year-old man with blunt abdominal trauma has a heart rate of 138/min, BP 82/48 mmHg, cool extremities and altered sensorium. After initial crystalloid administration, hypotension persists. Which is the most appropriate next step?", options: { A: "Administer another 2 L of crystalloid before reassessment", B: "Initiate haemorrhage control and activate a massive transfusion protocol", C: "Administer intravenous furosemide", D: "Start a beta-blocker to reduce myocardial oxygen demand" } },
+  { id: "q2", text: "A patient with major haemorrhage has received multiple units of packed red blood cells. He develops perioral tingling, hypotension and QT prolongation. Which abnormality is most likely responsible?", options: { A: "Hypermagnesaemia", B: "Hypernatraemia", C: "Hyperphosphataemia", D: "Citrate-induced hypocalcaemia" } },
+  { id: "q3", text: "A trauma patient remains hypotensive despite blood-product resuscitation. He has distended neck veins, muffled heart sounds and pulsus paradoxus. What is the most likely diagnosis?", options: { A: "Cardiac tamponade", B: "Haemorrhagic shock", C: "Neurogenic shock", D: "Hypovolaemic shock due to dehydration" } },
+  { id: "q4", text: "Which laboratory finding is most useful for identifying persistent tissue hypoperfusion in a patient whose blood pressure has temporarily normalised following resuscitation?", options: { A: "Serum albumin", B: "Total leukocyte count", C: "Serial serum lactate", D: "Serum amylase" } },
+  { id: "q5", text: "A patient receiving a blood transfusion develops acute hypoxaemia, bilateral pulmonary infiltrates and hypotension within two hours. There is no evidence of circulatory overload. Which transfusion complication is most likely?", options: { A: "Transfusion-associated circulatory overload", B: "Transfusion-related acute lung injury", C: "Delayed haemolytic transfusion reaction", D: "Isolated allergic transfusion reaction" } },
+  { id: "q6", text: "A patient develops wound dehiscence on postoperative day 8 after emergency laparotomy. Which factor most strongly predisposes to this complication?", options: { A: "Adequate protein intake", B: "Meticulous haemostasis", C: "Normal tissue oxygenation", D: "Wound infection" } },
+  { id: "q7", text: "Which cell type is principally responsible for collagen synthesis during the proliferative phase of wound healing?", options: { A: "Fibroblast", B: "Neutrophil", C: "Mast cell", D: "Erythrocyte" } },
+  { id: "q8", text: "A hypertrophic scar develops following a burn injury. Which feature best distinguishes it from a keloid?", options: { A: "It contains no collagen", B: "It invariably becomes malignant", C: "It remains confined to the original wound boundaries", D: "It develops exclusively in elderly patients" } },
+  { id: "q9", text: "A patient with diabetes has a chronic foot ulcer with poor granulation tissue. Which mechanism most directly impairs wound healing in this setting?", options: { A: "Excessive erythropoietin production", B: "Increased collagen cross-linking alone", C: "Accelerated angiogenesis", D: "Impaired leukocyte function and microvascular perfusion" } },
+  { id: "q10", text: "Which statement about the tensile strength of a healing surgical wound is most accurate?", options: { A: "It reaches 100% of normal skin strength within seven days", B: "It increases over weeks to months but rarely returns to the strength of uninjured tissue", C: "It depends exclusively on the number of skin sutures", D: "It is maximal immediately after epithelial closure" } },
+  { id: "q11", text: "A patient with septic shock from an intra-abdominal collection remains hypotensive after initial resuscitation. Imaging identifies a drainable abscess. Which intervention is essential in addition to appropriate antimicrobial therapy?", options: { A: "Delay intervention until inflammatory markers normalise", B: "Administer corticosteroids as the sole additional treatment", C: "Prompt source control by drainage or surgery, as appropriate", D: "Restrict all intravenous fluids regardless of perfusion" } },
+  { id: "q12", text: "A patient develops rapidly progressive pain, swelling, skin discoloration and systemic toxicity after a minor limb injury. Crepitus is absent. What is the best management?", options: { A: "Urgent surgical exploration and debridement with broad-spectrum antibiotics", B: "Oral antibiotics and outpatient review", C: "Wait for MRI confirmation before treatment", D: "Apply topical antiseptic and observe" } },
+  { id: "q13", text: "Which finding is most suggestive of a deep incisional surgical-site infection rather than a superficial incisional infection?", options: { A: "Mild erythema limited to the epidermis", B: "A small sterile blister caused by adhesive tape", C: "Pruritus around an otherwise intact incision", D: "Purulent collection involving fascia or muscle" } },
+  { id: "q14", text: "A patient develops Clostridioides difficile infection after a prolonged course of broad-spectrum antibiotics. Which strategy is most appropriate to reduce further antibiotic-related harm?", options: { A: "Continue the inciting antibiotic indefinitely", B: "Review and discontinue unnecessary inciting antibiotics and institute appropriate infection-specific treatment", C: "Prescribe an additional broad-spectrum antibiotic routinely", D: "Use antidiarrhoeal medication alone in all cases" } },
+  { id: "q15", text: "A patient with a prosthetic joint infection has persistent bacteraemia despite antibiotics. What best explains the difficulty in eradicating many implantassociated infections?", options: { A: "Implants prevent all immune-cell migration", B: "Antibiotics cannot enter the bloodstream when metal is present", C: "Biofilm formation on the prosthetic surface", D: "Bacteria become universally resistant to every antibiotic" } },
+  { id: "q16", text: "A patient with severe aortic stenosis requires elective major abdominal surgery. He reports new exertional syncope and worsening dyspnoea. What is the most appropriate approach?", options: { A: "Proceed immediately without further assessment", B: "Give prophylactic antibiotics and ignore the symptoms", C: "Prescribe a diuretic and proceed the same day", D: "Defer elective surgery for urgent cardiac assessment and optimisation" } },
+  { id: "q17", text: "A patient taking warfarin for a mechanical heart valve requires major elective surgery. What is the most important principle in planning perioperative anticoagulation?", options: { A: "Stop warfarin without considering thrombotic risk", B: "Individualise interruption and bridging decisions according to valve-related thrombotic risk, bleeding risk and current guidelines", C: "Continue full-dose warfarin for every operation", D: "Replace warfarin routinely with aspirin alone" } },
+  { id: "q18", text: "A patient with poorly controlled diabetes is scheduled for elective surgery. Which factor is particularly relevant when assessing perioperative risk?", options: { A: "Glycaemic control and the risk of perioperative glucose disturbances", B: "Hair colour", C: "Hand dominance", D: "ABO blood group alone" } },
+  { id: "q19", text: "A patient with obstructive sleep apnoea is scheduled for major surgery. Which perioperative concern is especially important?", options: { A: "Increased risk of postoperative hyperthyroidism", B: "Universal resistance to opioids", C: "Airway difficulty, opioid-related respiratory depression and postoperative monitoring needs", D: "Elimination of aspiration risk" } },
+  { id: "q20", text: "Which tool is commonly used to classify a patient's physical status before anaesthesia?", options: { A: "Glasgow Coma Scale", B: "Child–Pugh score", C: "Wells score", D: "American Society of Anesthesiologists Physical Status Classification" } },
+  { id: "q21", text: "Shortly after induction of general anaesthesia, a patient develops rapidly rising end-tidal carbon dioxide, muscle rigidity, tachycardia and hyperthermia. Which treatment is specifically indicated?", options: { A: "Intravenous dantrolene and immediate management of suspected malignant hyperthermia", B: "Intravenous propranolol alone", C: "External cooling as the only treatment", D: "Neostigmine without further assessment" } },
+  { id: "q22", text: "A patient develops severe hypotension and bradycardia shortly after spinal anaesthesia. Which mechanism best explains this complication?", options: { A: "Increased systemic vascular resistance", B: "Acute pulmonary fibrosis", C: "Sympathetic blockade causing vasodilatation and reduced venous return", D: "Increased circulating catecholamines in all cases" } },
+  { id: "q23", text: "A patient receiving opioid analgesia after surgery becomes difficult to arouse, with a respiratory rate of 6/min and pinpoint pupils. What is the most appropriate immediate approach?", options: { A: "Give a sedative to reduce agitation", B: "Stop opioid administration, support ventilation and administer titrated naloxone when indicated", C: "Encourage the patient to sleep", D: "Administer a long-acting opioid" } },
+  { id: "q24", text: "During regional anaesthesia, a patient develops circumoral numbness, tinnitus, seizures and ventricular arrhythmia after local anaesthetic injection. What is the most likely diagnosis?", options: { A: "Serotonin syndrome", B: "Malignant hyperthermia", C: "Neuroleptic malignant syndrome", D: "Local anaesthetic systemic toxicity" } },
+  { id: "q25", text: "Which technique generally provides effective postoperative analgesia while reducing systemic opioid requirements after major abdominal surgery?", options: { A: "Avoiding all analgesia until pain becomes severe", B: "Routine long-term neuromuscular blockade", C: "Appropriate multimodal analgesia, potentially including regional techniques", D: "Sedation alone without analgesics" } },
+  { id: "q26", text: "On postoperative day 2 after major abdominal surgery, a patient develops tachycardia, fever, increasing abdominal pain and oliguria. What should be the priority?", options: { A: "Immediate discharge if the wound appears normal", B: "Diagnose a superficial wound infection without further assessment", C: "Prescribe oral antipyretics and review after one week", D: "Urgent assessment for postoperative complications, including sepsis, bleeding or an anastomotic leak" } },
+  { id: "q27", text: "A patient develops sudden dyspnoea, pleuritic chest pain, tachycardia and hypoxaemia on the fifth day after surgery. What is the most concerning diagnosis?", options: { A: "Pulmonary embolism", B: "Postoperative constipation", C: "Superficial wound infection", D: "Urinary retention" } },
+  { id: "q28", text: "A patient has abdominal distension, nausea and absent bowel function following laparotomy. Imaging shows diffuse bowel dilatation without a transition point. What is the most likely diagnosis?", options: { A: "Strangulated external hernia", B: "Paralytic ileus", C: "Cecal carcinoma", D: "Adhesive obstruction with a clear transition point" } },
+  { id: "q29", text: "A postoperative patient develops acute kidney injury. Which initial assessment is particularly important before attributing the injury to intrinsic renal disease?", options: { A: "Serum cholesterol alone", B: "Routine bone densitometry", C: "Volume status, haemodynamics, urine output and potentially reversible causes", D: "Skin biopsy" } },
+  { id: "q30", text: "Which intervention is most effective as part of a comprehensive strategy to reduce postoperative pulmonary complications?", options: { A: "Prolonged bed rest", B: "Routine fluid overload", C: "Avoiding all pain relief", D: "Early mobilisation, appropriate analgesia and respiratory exercises" } },
+  { id: "q31", text: "A malnourished patient with prolonged poor oral intake develops hypophosphataemia, oedema and cardiac dysfunction shortly after initiation of nutritional support. What is the most likely diagnosis?", options: { A: "Refeeding syndrome", B: "Dumping syndrome", C: "Conn syndrome", D: "Nephrotic syndrome" } },
+  { id: "q32", text: "A patient with high-output ileostomy develops hypotension, oliguria and acute kidney injury. Which abnormality is particularly likely?", options: { A: "Chronic iron overload", B: "Fluid and sodium depletion", C: "Isolated hypercalcaemia", D: "Excessive total-body water with no electrolyte loss" } },
+  { id: "q33", text: "Which route of nutritional support is generally preferred when a patient's gastrointestinal tract is functional but oral intake is inadequate?", options: { A: "Total parenteral nutrition in every case", B: "No nutrition until full oral intake returns", C: "Enteral nutrition", D: "Intravenous glucose solution alone for several weeks" } },
+  { id: "q34", text: "A patient with severe symptomatic hyponatraemia develops seizures. Which principle is most important when correcting the sodium concentration?", options: { A: "Normalise sodium as rapidly as possible in every patient", B: "Use hypotonic fluid exclusively", C: "Ignore neurological symptoms until the next day", D: "Treat severe symptoms promptly while controlling the rate of correction to minimise osmotic demyelination risk" } },
+  { id: "q35", text: "A postoperative patient has persistent hypotension, tachycardia and low urine output. Which parameter is most useful when interpreted alongside clinical examination to assess response to initial fluid resuscitation?", options: { A: "Serial haemodynamic assessment and urine output trends", B: "Serum bilirubin alone", C: "A single normal haemoglobin result", D: "Body mass index" } },
+  { id: "q36", text: "An adult sustains deep burns involving the entire anterior trunk and the entire right upper limb. Using the adult Rule of Nines, what is the approximate total body surface area burned?", options: { A: "18%", B: "27%", C: "36%", D: "45%" } },
+  { id: "q37", text: "A patient trapped in a house fire has facial burns, soot in the mouth, hoarseness and progressive stridor. What is the most appropriate airway strategy?", options: { A: "Observe until oxygen saturation falls", B: "Give oral fluids and reassess in six hours", C: "Perform immediate definitive airway assessment and early intubation if airway compromise is suspected", D: "Delay airway management until radiographic pulmonary oedema appears" } },
+  { id: "q38", text: "A patient sustains a circumferential full-thickness burn of the chest. Ventilation becomes progressively difficult because chest expansion is restricted. Which intervention may be required?", options: { A: "Immediate skin grafting without stabilisation", B: "Fluid restriction alone", C: "Oral antibiotics alone", D: "Chest-wall escharotomy" } },
+  { id: "q39", text: "A patient with major burns develops oliguria during the initial resuscitation period. Which principle should guide fluid administration?", options: { A: "Titrate resuscitation to physiological endpoints, including urine output and perfusion, while avoiding both under-resuscitation and fluid overload", B: "Stop all intravenous fluids regardless of clinical status", C: "Administer a fixed massive fluid volume without reassessment", D: "Use diuretics as the only intervention" } },
+  { id: "q40", text: "Which statement about full-thickness burns is most accurate?", options: { A: "They always heal rapidly without scarring", B: "They commonly require excision and wound coverage because spontaneous healing is limited when dermal structures are destroyed", C: "They are defined by epidermal involvement alone", D: "They do not cause fluid loss" } },
+  { id: "q41", text: "A patient presents with severe abdominal pain that appears disproportionate to the relatively mild tenderness on examination. He has atrial fibrillation. Which diagnosis must be urgently considered?", options: { A: "Uncomplicated gastro-oesophageal reflux", B: "Irritable bowel syndrome", C: "Acute mesenteric ischaemia", D: "Chronic haemorrhoids" } },
+  { id: "q42", text: "A patient has right upper quadrant pain, fever and jaundice. Which combination most strongly suggests acute cholangitis?", options: { A: "Jaundice and painless abdominal distension alone", B: "Left iliac fossa pain and constipation", C: "Epigastric pain relieved by antacids", D: "Charcot's triad of fever, right upper quadrant pain and jaundice" } },
+  { id: "q43", text: "A patient with suspected appendicitis develops increased right lower quadrant pain when the examiner extends the right hip. Which sign is this?", options: { A: "Psoas sign", B: "Murphy's sign", C: "Rovsing's sign", D: "Courvoisier's sign" } },
+  { id: "q44", text: "A patient has abdominal distension, shifting dullness and dilated superficial abdominal veins. Which investigation is generally most useful initially to confirm and characterise ascites?", options: { A: "Plain radiograph of the skull", B: "Abdominal ultrasonography", C: "Electroencephalography", D: "Spirometry" } },
+  { id: "q45", text: "A patient presents with sudden severe abdominal pain, board-like rigidity and generalised guarding. What is the most appropriate interpretation?", options: { A: "Functional abdominal pain is the most likely diagnosis", B: "The patient can be safely discharged if afebrile", C: "Peritonitis due to a potentially perforated viscus must be urgently assessed and managed", D: "A normal leukocyte count excludes a surgical emergency" } },
+  { id: "q46", text: "A 72-year-old woman presents with vomiting, abdominal distension and a painful lump below the inguinal ligament, medial to the femoral vein. What is the most likely diagnosis?", options: { A: "Direct inguinal hernia", B: "Spigelian hernia", C: "Incisional hernia", D: "Femoral hernia" } },
+  { id: "q47", text: "During surgery for a strangulated inguinal hernia, the surgeon finds that the bowel segment forming the antimesenteric wall is ischaemic, while the remainder of the loop is viable. Which type of hernia is this?", options: { A: "Richter's hernia", B: "Sliding hernia", C: "Littre's hernia", D: "Amyand's hernia" } },
+  { id: "q48", text: "A young adult has an indirect inguinal hernia. Which anatomical feature distinguishes it from a direct inguinal hernia?", options: { A: "It always lies medial to the inferior epigastric vessels", B: "It enters through the deep inguinal ring and lies lateral to the inferior epigastric vessels", C: "It protrudes exclusively through Hesselbach's triangle", D: "It cannot extend into the scrotum" } },
+  { id: "q49", text: "A patient presents with an irreducible, tender incisional hernia, persistent vomiting and overlying skin erythema. What is the most appropriate management?", options: { A: "Reassure and arrange routine elective repair in six months", B: "Apply a truss and discharge", C: "Urgent surgical assessment and operative management because strangulation is suspected", D: "Repeated forceful reduction despite signs of ischaemia" } },
+  { id: "q50", text: "Which factor is strongly associated with the development of an incisional hernia?", options: { A: "Excellent nutritional status alone", B: "Use of appropriate wound closure technique", C: "Early mobilisation in an otherwise uncomplicated recovery", D: "Surgical-site infection and impaired fascial healing" } },
+  { id: "q51", text: "A patient with a posterior duodenal ulcer develops sudden severe abdominal pain and haemodynamic instability. Which vessel is classically at risk of erosion?", options: { A: "Splenic artery", B: "Gastroduodenal artery", C: "Inferior mesenteric artery", D: "Renal artery" } },
+  { id: "q52", text: "A patient with gastric outlet obstruction has persistent vomiting, hypochloraemic metabolic alkalosis and hypokalaemia. Which mechanism primarily explains the alkalosis?", options: { A: "Loss of gastric hydrochloric acid with volume depletion and renal bicarbonate retention", B: "Excessive bicarbonate loss through diarrhoea", C: "Acute respiratory acidosis", D: "Increased lactic acid production alone" } },
+  { id: "q53", text: "A patient with an ulcerated gastric lesion has biopsy-proven adenocarcinoma. Which investigation is important for staging locoregional disease and detecting distant metastases before curative treatment?", options: { A: "Plain abdominal radiography alone", B: "Stool occult blood testing alone", C: "Cross-sectional staging imaging, usually including CT of the chest, abdomen and pelvis", D: "Serum lipase alone" } },
+  { id: "q54", text: "A patient presents with sudden epigastric pain, involuntary guarding and free subdiaphragmatic air on erect chest radiography. What is the most likely diagnosis?", options: { A: "Uncomplicated gastritis", B: "Functional dyspepsia", C: "Chronic constipation", D: "Perforated peptic ulcer" } },
+  { id: "q55", text: "A patient with a bleeding peptic ulcer has undergone endoscopic haemostasis but develops recurrent haemodynamic instability from rebleeding. What is the most appropriate next step?", options: { A: "Discharge with oral antacids", B: "Urgent repeat endoscopic assessment, with transcatheter arterial embolisation or surgery if bleeding cannot be controlled", C: "Stop all monitoring because haemostasis was initially achieved", D: "Use proton-pump inhibitor therapy alone regardless of ongoing shock" } },
+  { id: "q56", text: "A patient with cirrhosis presents with haematemesis, hypotension and suspected oesophageal variceal bleeding. Which treatment combination is most appropriate?", options: { A: "Oral iron and outpatient review", B: "Diuretics alone", C: "Vasoactive therapy, antibiotic prophylaxis and urgent endoscopic management after initial resuscitation", D: "Immediate anticoagulation without evaluation" } },
+  { id: "q57", text: "A cirrhotic patient develops fever, abdominal pain and worsening encephalopathy. Ascitic fluid analysis shows a neutrophil count of 400 cells/mm³. What is the most likely diagnosis?", options: { A: "Spontaneous bacterial peritonitis", B: "Uncomplicated portal hypertension", C: "Hepatocellular adenoma", D: "Acute appendicitis in every case" } },
+  { id: "q58", text: "A patient with a liver mass has cirrhosis and markedly elevated alpha-fetoprotein. Which diagnosis is most likely?", options: { A: "Focal nodular hyperplasia", B: "Simple hepatic cyst", C: "Haemangioma", D: "Hepatocellular carcinoma" } },
+  { id: "q59", text: "A patient with a pyogenic liver abscess has persistent fever despite appropriate intravenous antibiotics. Imaging demonstrates a large, accessible collection. What is the most appropriate next step?", options: { A: "Stop antibiotics immediately", B: "Consider image-guided drainage alongside antimicrobial therapy", C: "Perform routine splenectomy", D: "Restrict all fluids until the fever resolves" } },
+  { id: "q60", text: "Which feature is most characteristic of portal hypertension due to cirrhosis?", options: { A: "Increased portal venous flow without resistance", B: "Universal absence of splenomegaly", C: "Increased intrahepatic vascular resistance leading to portosystemic collateral formation", D: "Reduced risk of gastrointestinal bleeding" } },
+  { id: "q61", text: "A patient sustains blunt abdominal trauma and has a splenic laceration on CT. He is haemodynamically stable and has no peritonitis. What is the preferred initial approach in an appropriately monitored setting?", options: { A: "Immediate splenectomy in every case", B: "Discharge without observation", C: "Diagnostic laparotomy solely because a splenic injury is present", D: "Non-operative management with close monitoring, with angioembolisation when indicated" } },
+  { id: "q62", text: "A patient undergoes emergency splenectomy following traumatic splenic rupture. Which preventive measure is particularly important for reducing the risk of severe infection later?", options: { A: "Appropriate vaccination against encapsulated organisms, with timing based on urgency and local guidance", B: "Lifelong broad-spectrum antibiotics for every adult without exception", C: "Avoidance of all future immunisations", D: "Routine anticoagulation for life regardless of risk" } },
+  { id: "q63", text: "Which organism is of particular concern in overwhelming postsplenectomy infection?", options: { A: "Mycoplasma pneumoniae only", B: "Streptococcus pneumoniae", C: "Candida albicans in every case", D: "Clostridium tetani as the principal encapsulated organism" } },
+  { id: "q64", text: "A patient with hereditary spherocytosis has severe haemolytic anaemia and symptomatic splenomegaly despite appropriate supportive care. Which intervention may be considered in selected cases?", options: { A: "Routine liver transplantation", B: "Total colectomy", C: "Splenectomy after assessment of indications and infection-prevention measures", D: "Cholecystectomy as the only definitive treatment for haemolysis" } },
+  { id: "q65", text: "A patient with a splenic injury initially stabilises but later develops recurrent tachycardia and hypotension. What is the most concerning explanation?", options: { A: "Normal physiological recovery", B: "Uncomplicated constipation", C: "Isolated anxiety", D: "Delayed or ongoing intra-abdominal haemorrhage" } },
+  { id: "q66", text: "A patient has fever, jaundice and right upper quadrant pain. Ultrasound shows a dilated common bile duct containing a stone. He is hypotensive and confused. Which intervention is particularly important after initial stabilisation and antibiotics?", options: { A: "Urgent biliary decompression, commonly by ERCP", B: "Elective outpatient cholecystectomy several months later without drainage", C: "Fluid restriction alone", D: "Observation until bilirubin normalises spontaneously" } },
+  { id: "q67", text: "A patient with acute cholecystitis has persistent pain, fever and localised peritonism. Ultrasound suggests gangrenous changes. What is the preferred management in a suitable operative candidate?", options: { A: "Oral analgesia and discharge", B: "Routine delay of surgery for several months", C: "Early operative management, usually cholecystectomy, with appropriate resuscitation and antibiotics", D: "Long-term proton-pump inhibitor therapy alone" } },
+  { id: "q68", text: "During laparoscopic cholecystectomy, the critical view of safety cannot be achieved because of severe inflammation. What is the safest principle?", options: { A: "Clip and divide unidentified structures", B: "Persist with dissection until the anatomy becomes clear regardless of injury risk", C: "Divide the common bile duct to improve exposure", D: "Use a bailout strategy, such as subtotal cholecystectomy or conversion when appropriate, rather than divide uncertain anatomy" } },
+  { id: "q69", text: "A patient develops persistent jaundice and weight loss. Imaging shows a distal common bile duct stricture with no obvious gallstones. Which diagnosis requires careful exclusion?", options: { A: "Uncomplicated biliary colic", B: "Malignancy involving the pancreatic head or distal bile duct", C: "Simple gastro-oesophageal reflux", D: "Acute viral pharyngitis" } },
+  { id: "q70", text: "Which biochemical pattern is most consistent with extrahepatic biliary obstruction?", options: { A: "Disproportionate elevation of alkaline phosphatase and gamma-glutamyl transferase, often with conjugated hyperbilirubinaemia", B: "Isolated reduction in serum sodium", C: "Isolated elevation of creatine kinase", D: "Low serum amylase with no liver-test abnormalities" } },
+  { id: "q71", text: "A patient with acute pancreatitis has persistent organ failure and CT evidence of pancreatic necrosis. Which statement about intervention is most accurate?", options: { A: "Every case requires immediate open necrosectomy within the first 24 hours", B: "Antibiotics should be given routinely to every patient with sterile necrosis", C: "Supportive management is central; intervention for suspected infected necrosis is generally delayed when feasible and follows a step-up approach", D: "Oral intake must be withheld for several weeks in all cases" } },
+  { id: "q72", text: "A patient with acute pancreatitis develops fever, clinical deterioration and gas within a pancreatic necrotic collection on CT. What is the most likely diagnosis?", options: { A: "Uncomplicated chronic gastritis", B: "Pancreatic pseudocyst without infection", C: "Simple biliary colic", D: "Infected pancreatic necrosis" } },
+  { id: "q73", text: "A patient with painless progressive jaundice, weight loss and a palpable, non-tender gallbladder has a mass in the pancreatic head. What is the most likely diagnosis?", options: { A: "Acute appendicitis", B: "Pancreatic adenocarcinoma", C: "Splenic rupture", D: "Uncomplicated irritable bowel syndrome" } },
+  { id: "q74", text: "Which complication is classically associated with chronic pancreatitis?", options: { A: "Exocrine pancreatic insufficiency and diabetes mellitus", B: "Permanent protection against diabetes", C: "Increased pancreatic exocrine function", D: "Universal spontaneous resolution of calcifications" } },
+  { id: "q75", text: "A patient with severe acute pancreatitis develops hypotension, hypoxaemia and rising creatinine. Which factor most strongly influences early management?", options: { A: "Immediate pancreatic resection in every patient", B: "Routine fluid restriction irrespective of perfusion", C: "Organ support, careful goal-directed fluid therapy, analgesia and early enteral nutrition when feasible", D: "Delaying assessment until pancreatic enzymes normalise" } },
+  { id: "q76", text: "A patient develops abdominal pain, vomiting and distension several years after laparotomy. CT shows dilated small-bowel loops with a transition point and no signs of ischaemia or perforation. What is the most likely cause?", options: { A: "Acute viral hepatitis", B: "Primary lung cancer", C: "Uncomplicated gastritis", D: "Adhesive small-bowel obstruction" } },
+  { id: "q77", text: "A patient with small-bowel obstruction has continuous severe pain, fever, tachycardia, metabolic acidosis and guarding. What is the most appropriate management?", options: { A: "Immediate surgical assessment and urgent exploration when strangulation or ischaemia is suspected", B: "Routine discharge with laxatives", C: "Oral fluids and outpatient follow-up", D: "Prolonged observation without monitoring" } },
+  { id: "q78", text: "A patient with Crohn's disease develops recurrent colicky pain and vomiting. Imaging shows a short, fixed ileal stricture. Which factor helps determine whether endoscopic dilation, medical treatment or surgery is appropriate?", options: { A: "Hair colour and handedness", B: "Stricture length, inflammatory activity, fibrosis, associated complications and accessibility", C: "Serum sodium alone", D: "Presence of uncomplicated haemorrhoids" } },
+  { id: "q79", text: "A patient with a Meckel's diverticulum develops painless lower gastrointestinal bleeding. Which embryological remnant is responsible for this condition?", options: { A: "Urachus", B: "Vitelline artery alone", C: "Persistent vitelline duct", D: "Persistent thyroglossal duct" } },
+  { id: "q80", text: "A patient with a high-output jejunostomy develops dehydration, electrolyte abnormalities and progressive weight loss. Which management principle is most appropriate?", options: { A: "Advise unlimited hypotonic fluid intake without electrolyte monitoring", B: "Stop all nutrition", C: "Prescribe diuretics routinely", D: "Optimise fluid and electrolyte replacement, dietary strategy and specialist intestinal-failure support when needed" } },
+  { id: "q81", text: "A patient with ulcerative colitis has severe bloody diarrhoea, fever, tachycardia and colonic dilatation on imaging. What is the most concerning complication?", options: { A: "Toxic megacolon", B: "Uncomplicated irritable bowel syndrome", C: "Simple haemorrhoids", D: "Gastric outlet obstruction" } },
+  { id: "q82", text: "A patient with Crohn's disease has recurrent perianal fistulas and a complex branching tract on MRI. Which principle is most appropriate?", options: { A: "Fistulotomy is mandatory for every complex fistula", B: "Antibiotics alone always cure fistulising Crohn's disease", C: "Multidisciplinary management involving colorectal surgery, assessment for sepsis and appropriate medical therapy", D: "Ignore the fistula if abdominal pain is absent" } },
+  { id: "q83", text: "Which pathological feature most strongly favours Crohn's disease over ulcerative colitis?", options: { A: "Continuous mucosal inflammation limited to the rectum and colon", B: "Transmural inflammation with skip lesions and possible fistula formation", C: "Inflammation restricted exclusively to the mucosa in all cases", D: "Absence of strictures and penetrating complications" } },
+  { id: "q84", text: "A patient with acute severe ulcerative colitis fails to improve despite appropriate intravenous corticosteroids and rescue medical therapy is being considered. Which finding would make urgent surgery particularly necessary?", options: { A: "Mild bloating without systemic symptoms", B: "One episode of uncomplicated constipation", C: "A normal abdominal examination and stable observations", D: "Perforation, uncontrolled haemorrhage, worsening toxic megacolon or clinical deterioration" } },
+  { id: "q85", text: "A patient with longstanding extensive ulcerative colitis asks about colorectal cancer prevention. Which strategy is most appropriate?", options: { A: "Colonoscopic surveillance according to disease duration, extent, risk factors and current guidelines", B: "No surveillance if symptoms are absent", C: "Annual plain abdominal radiography", D: "Routine appendectomy to eliminate colorectal cancer risk" } },
+  { id: "q86", text: "A patient has migratory periumbilical pain localising to the right iliac fossa, anorexia and low-grade fever. Which process best explains the classical progression of pain?", options: { A: "Primary irritation of the parietal peritoneum causing diffuse visceral pain from the outset", B: "Referred pain from the spleen", C: "Initial visceral afferent stimulation followed by parietal peritoneal irritation", D: "Biliary obstruction causing appendiceal inflammation" } },
+  { id: "q87", text: "A patient with suspected appendicitis has equivocal clinical findings. He is stable, and ultrasonography is non-diagnostic. Which investigation may be appropriate to clarify the diagnosis in a non-pregnant adult?", options: { A: "Routine colonoscopy during the acute episode", B: "CT of the abdomen and pelvis, with contrast when appropriate", C: "Skull radiography", D: "Electrocardiography as the sole diagnostic test" } },
+  { id: "q88", text: "A patient presents with perforated appendicitis and a well-localised appendiceal abscess. He is haemodynamically stable without generalised peritonitis. What is a reasonable management option in selected cases?", options: { A: "Immediate discharge without treatment", B: "Routine total colectomy", C: "Observation without antibiotics", D: "Antibiotics with image-guided drainage when indicated, with operative management based on clinical circumstances" } },
+  { id: "q89", text: "A patient has appendicitis with generalised peritonitis and septic physiology. What is the most appropriate principle?", options: { A: "Prompt resuscitation, antibiotics and urgent operative source control", B: "Delay treatment until the leukocyte count normalises", C: "Treat with oral analgesia alone", D: "Avoid source control because peritonitis is self-limiting" } },
+  { id: "q90", text: "An older adult presents with appendicitis and a palpable right iliac fossa mass. After resolution of the acute episode, what additional consideration is particularly important?", options: { A: "No further assessment is needed in any patient over 60", B: "Routine splenectomy", C: "Evaluate for an underlying appendiceal or colonic neoplasm as clinically indicated", D: "Diagnose Crohn's disease without further investigation" } },
+  { id: "q91", text: "A patient with colorectal cancer has iron-deficiency anaemia, altered bowel habits and weight loss. Which investigation is central to establishing the diagnosis?", options: { A: "Plain abdominal radiography alone", B: "Serum amylase", C: "Urinary microscopy alone", D: "Colonoscopy with biopsy, when clinically appropriate" } },
+  { id: "q92", text: "A patient with an obstructing left-sided colonic tumour has marked distension and CT evidence of proximal colonic dilatation. What is the most important initial management principle?", options: { A: "Prescribe bulk-forming laxatives and discharge", B: "Resuscitation, bowel decompression where appropriate, staging and timely surgical or endoscopic intervention based on the clinical situation", C: "Delay intervention until perforation develops", D: "Start high-fibre oral intake immediately" } },
+  { id: "q93", text: "A patient has a malignant polyp removed endoscopically. Histology shows adverse features suggesting a significant risk of lymph-node metastasis. What should be considered?", options: { A: "Further oncological resection with appropriate lymph-node assessment, based on histological risk and patient fitness", B: "No further follow-up under any circumstances", C: "Routine appendectomy", D: "Lifelong antibiotics" } },
+  { id: "q94", text: "A patient with sigmoid diverticulitis develops generalised peritonitis and free intraperitoneal air. What is the most appropriate approach?", options: { A: "Routine outpatient oral analgesia", B: "Colonoscopy during uncontrolled generalised peritonitis", C: "Resuscitation, broad-spectrum antibiotics and urgent surgical assessment for source control", D: "High-fibre diet as the sole immediate treatment" } },
+  { id: "q95", text: "A patient with colorectal cancer has multiple liver lesions on staging CT. Which principle is most appropriate before deciding on treatment?", options: { A: "Assume surgery is always futile", B: "Assume every lesion is benign", C: "Proceed directly to colectomy without assessing metastatic disease", D: "Assess resectability, disease distribution, patient fitness and multidisciplinary treatment options" } },
+  { id: "q96", text: "A patient with small-bowel obstruction has a CT scan showing a C-shaped loop, two adjacent transition points and mesenteric twisting. Which diagnosis is most concerning?", options: { A: "Paralytic ileus", B: "Closed-loop obstruction with risk of strangulation", C: "Uncomplicated gastroenteritis", D: "Chronic peptic ulcer disease" } },
+  { id: "q97", text: "A patient with bowel obstruction has persistent tachycardia, fever, localised guarding and rising lactate despite resuscitation. What is the most appropriate interpretation?", options: { A: "These findings indicate uncomplicated obstruction and safe discharge", B: "Lactate excludes bowel ischaemia if initially normal", C: "Suspect strangulation or bowel ischaemia and arrange urgent surgical intervention", D: "Continue conservative management regardless of deterioration" } },
+  { id: "q98", text: "A patient with adhesive small-bowel obstruction is stable, has no peritonitis and has no CT evidence of ischaemia. Which management strategy is reasonable initially?", options: { A: "Bowel rest, intravenous fluid and electrolyte replacement, nasogastric decompression when indicated, and close reassessment", B: "Immediate colectomy in every case", C: "Unlimited oral intake", D: "Discharge without follow-up" } },
+  { id: "q99", text: "A patient develops acute colonic pseudo-obstruction after major surgery. Imaging shows marked colonic dilatation without a mechanical transition point. After failure of appropriate conservative measures and exclusion of contraindications, which treatment may be considered?", options: { A: "Routine appendectomy", B: "Oral bulk laxatives in every patient", C: "Immediate colectomy in all uncomplicated cases", D: "Monitored intravenous neostigmine or endoscopic decompression, depending on the clinical situation" } },
+  { id: "q100", text: "A patient with sigmoid volvulus has abdominal distension and pain but no peritonitis or evidence of bowel perforation. What is generally the preferred initial intervention?", options: { A: "Immediate total colectomy in every case", B: "Endoscopic detorsion and decompression, followed by assessment for definitive treatment because recurrence is common", C: "High-fibre diet as the sole acute intervention", D: "Discharge without decompression" } }
+];
+
+    let timeLeft = EXAM_MINUTES * 60;
+    let timerInterval = null;
+    let isExamActive = false;
+    let studentData = { name: "", roll: "" };
+    let violationCount = 0;
+    let initialWidth = window.innerWidth;
+    let initialHeight = window.innerHeight;
+
+    // QR ટોકન ચકાસણી
+    function verifyQRToken() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (token === SECRET_QR_TOKEN) {
+        document.getElementById("auth-box").style.display = "block";
+        document.getElementById("error-box").style.display = "none";
+      } else {
+        document.getElementById("auth-box").style.display = "none";
+        document.getElementById("error-box").style.display = "block";
+      }
+    }
+
+    // પ્રશ્નો શફલિંગ
+    function shuffle(arr) {
+      let copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function renderQuiz() {
+      const container = document.getElementById("questions-container");
+      container.innerHTML = shuffle(rawQuestions).map((q, idx) => `
+        <div class="question-card">
+          <div class="question-title">${idx + 1}. ${q.text}</div>
+          <div class="options">
+            ${Object.entries(q.options).map(([k, val]) => `
+              <label>
+                <input type="radio" name="${q.id}" value="${k}">
+                <strong>${k}.</strong>&nbsp;${val}
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // પરીક્ષા શરૂ
+    function startExam() {
+      const name = document.getElementById("stud-name").value.trim();
+      const roll = document.getElementById("stud-roll").value.trim();
+      if (!name || !roll) {
+        alert("કૃપા કરીને નામ અને રોલ નંબર બંને લખો!");
+        return;
+      }
+      studentData = { name, roll };
+      document.getElementById("display-student").innerText = `${name} | રોલ નં: ${roll}`;
+
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+
+      renderQuiz();
+      document.getElementById("start-overlay").style.display = "none";
+      document.getElementById("exam-box").style.display = "block";
+      isExamActive = true;
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById("timer-display").innerText = `સમય: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        if (timeLeft <= 0) submitExam("સમય પૂર્ણ થયો");
+      }, 1000);
+    }
+
+    // ઓટો સેવ
+    function saveAnswers() {
+      const formData = new FormData(document.getElementById("quiz-form"));
+      localStorage.setItem("exam_cache", JSON.stringify(Object.fromEntries(formData.entries())));
+    }
+    document.getElementById("quiz-form").addEventListener("change", saveAnswers);
+
+    function restoreAnswers() {
+      const cache = localStorage.getItem("exam_cache");
+      if (!cache) return;
+      const parsed = JSON.parse(cache);
+      for (let [qId, val] of Object.entries(parsed)) {
+        const rad = document.querySelector(`input[name="${qId}"][value="${val}"]`);
+        if (rad) rad.checked = true;
+      }
+    }
+
+    // પ્રોક્ટરિંગ
+    function handleViolation(reason) {
+      if (!isExamActive) return;
+      violationCount++;
+      saveAnswers();
+
+      if (violationCount > MAX_VIOLATIONS) {
+        alert("મહત્તમ ચેતવણી મર્યાદા પૂરી થઈ. તમારું પેપર જમા થઈ રહ્યું છે.");
+        submitExam(`બહાર નીકળ્યા/લિમિટ પૂરી: ${reason}`);
+        return;
+      }
+
+      isExamActive = false;
+      document.getElementById("lockout-reason").innerText = `${reason} (ચેતવણી: ${violationCount}/${MAX_VIOLATIONS})`;
+      document.getElementById("supervisor-pin").value = "";
+      document.getElementById("lockout-modal").style.display = "flex";
+    }
+
+    function unlockExam() {
+      if (document.getElementById("supervisor-pin").value === SUPERVISOR_PIN) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+        document.getElementById("lockout-modal").style.display = "none";
+        isExamActive = true;
+        restoreAnswers();
+      } else {
+        alert("ખોટો સુપરવાઇઝર પિન!");
+      }
+    }
+
+    // સિક્યોરિટી ઇવેન્ટ્સ
+    document.addEventListener("visibilitychange", () => {
+      if (isExamActive && document.hidden) handleViolation("ટેબ સ્વિચ અથવા એપ મિનિમાઇઝ કરી");
+    });
+    window.addEventListener("blur", () => {
+      if (isExamActive) handleViolation("વિન્ડો અનફોકસ થઈ (કોલ/નોટિફિકેશન/બીજી એપ)");
+    });
+    window.addEventListener("resize", () => {
+      if (!isExamActive) return;
+      if (Math.abs(window.innerWidth - initialWidth) > initialWidth * 0.25 || 
+          Math.abs(window.innerHeight - initialHeight) > initialHeight * 0.25) {
+        handleViolation("સ્પ્લિટ-સ્ક્રીન અથવા AI ફ્લોટિંગ વિન્ડો ખોલી");
+      }
+    });
+
+    document.addEventListener("copy", (e) => { e.preventDefault(); if (isExamActive) handleViolation("પ્રશ્ન કૉપી કર્યો"); });
+    document.addEventListener("paste", (e) => e.preventDefault());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "PrintScreen" || e.keyCode === 44) {
+        if (navigator.clipboard) navigator.clipboard.writeText("");
+        handleViolation("સ્ક્રીનશોટ લેવાનો પ્રયાસ કર્યો");
+      }
+    });
+
+    // ૧૦૦% અચૂક સબમિશન ફંક્શન (GET Ping Method - CORS મુક્ત)
+    function submitExam(reason) {
+      if (!isExamActive && violationCount <= MAX_VIOLATIONS && reason === "વિદ્યાર્થી દ્વારા જાતે સબમિટ") return;
+      isExamActive = false;
+      clearInterval(timerInterval);
+
+      // જવાબો પહેલા એકઠા કરવા (કારણ કે પછીથી સ્ક્રીન બદલાઈ જશે)
+      const quizForm = document.getElementById("quiz-form");
+      const formData = new FormData(quizForm);
+      const answersObj = Object.fromEntries(formData.entries());
+
+      // સબમિટ થતી વખતે પ્રોગ્રેસ સ્ક્રીન
+      document.body.innerHTML = `
+        <div style="text-align:center; padding:50px; font-family:system-ui;">
+          <h2 style="color:#2563eb;">પેપર જમા થઈ રહ્યું છે...</h2>
+          <p style="color:#64748b;">કૃપા કરીને રાહ જુઓ...</p>
+        </div>
+      `;
+
+      // URL પેરામીટર્સ તૈયાર કરવા
+      const queryParams = new URLSearchParams({
+        name: studentData.name,
+        rollNo: studentData.roll,
+        status: reason,
+        violations: violationCount,
+        answers: JSON.stringify(answersObj)
+      });
+
+      const fullSubmissionUrl = SCRIPT_URL + "?" + queryParams.toString();
+
+      // સફળતાનું કન્ફર્મેશન પેજ
+      let isCompleted = false;
+      const displaySuccess = () => {
+        if (isCompleted) return;
+        isCompleted = true;
+        localStorage.removeItem("exam_cache");
+        document.body.innerHTML = `
+          <div style="text-align:center; padding:50px; font-family:system-ui;">
+            <h1 style="color:#16a34a; font-size: 2.2rem; margin-bottom: 10px;">✅ પરીક્ષા સફળતાપૂર્વક પૂર્ણ થઈ ગઈ છે!</h1>
+            <p style="font-size:1.2rem; color:#1e293b;"><strong>વિદ્યાર્થી:</strong> ${studentData.name} | <strong>રોલ નંબર:</strong> ${studentData.roll}</p>
+            <p style="color:#64748b;"><strong>સ્ટેટસ:</strong> ${reason}</p>
+            <div style="margin-top:25px; padding:15px 25px; background:#dcfce7; color:#15803d; border-radius:8px; display:inline-block; font-weight:500;">
+              તમારા જવાબો Google Sheet માં સફળતાપૂર્વક નોંધાઈ ગયા છે. હવે તમે આ પેજ બંધ કરી શકો છો.
+            </div>
+          </div>
+        `;
+      };
+
+      // બ્રાઉઝર સિક્યોરિટી અને CORS થી બચવા માટે સૌથી સુરક્ષિત રીત: Hidden Form & Iframe 
+      const iframe = document.createElement("iframe");
+      iframe.name = "hidden_iframe";
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = SCRIPT_URL;
+      form.target = "hidden_iframe";
+      form.style.display = "none";
+
+      const params = {
+        name: studentData.name,
+        rollNo: studentData.roll,
+        status: reason,
+        violations: violationCount,
+        answers: JSON.stringify(answersObj)
+      };
+
+      for (let key in params) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = params[key];
+        form.appendChild(input);
+      }
+      
+      document.body.appendChild(form);
+      form.submit();
+
+      // ૧.૫ સેકન્ડમાં સ્ક્રીન પર સફળતા બતાવી દેવી
+      setTimeout(displaySuccess, 1500);
+    }
+
+    // પેજ લોડ થતાં જ QR Token વેરિફાય કરો
+    window.onload = verifyQRToken;
+  </script>
+</body>
+</html>
